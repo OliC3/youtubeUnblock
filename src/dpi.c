@@ -207,9 +207,9 @@ int process_tcp_packet(const struct section_config_t *section, const struct pars
 	if (pkt->tcph->syn) 
 		return PKT_CONTINUE;
 
-	int is_matched = 0;
 	struct fragmentation_points frag_pts = {0};
 
+	int is_matched = section->tcp_match_all;
 	if (!is_matched && section->tls_enabled) {
 		enum tls_proc_verdict vrd = process_tls_packet(section, pkt, &frag_pts);
 
@@ -235,6 +235,16 @@ int process_tcp_packet(const struct section_config_t *section, const struct pars
 					section->frag_sni_pos;
 				lgtrace_addp("frag set to %d", section->frag_sni_pos);
 			}
+		}
+	}
+
+	if (section->tcp_match_all) {
+		frag_pts.used_points = 0;
+		if (section->frag_sni_pos &&
+			pkt->transport_payload_len > section->frag_sni_pos) {
+			frag_pts.payload_points[frag_pts.used_points++] =
+				section->frag_sni_pos;
+			lgtrace_addp("frag set to %d", section->frag_sni_pos);
 		}
 	}
 
@@ -355,6 +365,42 @@ int perform_attack(const struct section_config_t *section,
 		post_fake_sni(f_type, iph, iph_len, tcph, tcph_len);
 	} 
 
+	if (section->frag_origin_retries) {
+		void *iph;
+		size_t iph_len;
+		struct tcphdr *tcph;
+		size_t tcph_len;
+		uint8_t *data;
+		size_t dlen;
+
+		int ret = tcp_payload_split(payload, payload_len,
+				      &iph, &iph_len, &tcph, &tcph_len,
+				      &data, &dlen);
+
+		if (ret < 0) {
+			lgerror(ret, "tcp_payload_split in targ_sni");
+			goto accept_lc;
+		}
+
+
+		for (int i = 0; i < section->frag_origin_retries; i++) {
+			if (pkt->ipver == IP4VERSION) {
+				struct iphdr *ip4h = (struct iphdr *)iph;
+				ip4h->id = htons(ntohs(ip4h->id) + i + 1);
+			}
+
+			set_ip_checksum(iph, iph_len);
+			set_tcp_checksum(tcph, iph, iph_len);
+
+			lgtrace_addp("post frag dup #%d", i + 1);
+			ret = instance_config.send_raw_packet(payload, payload_len);
+			if (ret < 0) {
+				lgerr("send frag dup failed");
+			}
+		}
+
+		goto accept_lc;
+	}
 
 	if (frag_pts->used_points > 0) {
 		if (section->fragmentation_strategy == FRAG_STRAT_TCP) {
