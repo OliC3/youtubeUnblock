@@ -68,10 +68,12 @@ struct section_config_t {
 	int tcp_dport_range_len;
 
 	int tcp_match_connpkts;
+	int tcp_match_all;
 
 	int fragmentation_strategy;
 	int frag_sni_reverse;
 	int frag_sni_faked;
+	int frag_origin_retries;
 	int faking_strategy;
 	int frag_middle_sni;
 	int frag_sni_pos;
@@ -246,9 +248,11 @@ enum {
 	.tcp_dport_range = NULL,				\
 	.tcp_dport_range_len = 0,				\
 	.tcp_match_connpkts = 0,				\
+	.tcp_match_all = 0,					\
 	.tls_enabled = 1,					\
 	.frag_sni_reverse = 1,                                  \
 	.frag_sni_faked = 0,                                    \
+	.frag_origin_retries = 0,                               \
 	.fragmentation_strategy = FRAGMENTATION_STRATEGY,       \
 	.faking_strategy = FAKING_STRATEGY,                     \
 	.faking_ttl = FAKE_TTL,                                 \

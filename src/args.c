@@ -369,6 +369,7 @@ enum {
 	OPT_FRAG_SNI_FAKED,
 	OPT_FRAG_MIDDLE_SNI,
 	OPT_FRAG_SNI_POS,
+	OPT_FRAG_ORIGIN_RETRIES,
 	OPT_FK_WINSIZE,
 	OPT_TRACE,
 	OPT_INSTAFLUSH,
@@ -399,6 +400,7 @@ enum {
 	OPT_VERSION,
 	OPT_CONNBYTES_LIMIT,
 	OPT_TCP_M_CONNPKTS,
+	OPT_TCP_M_ALL,
 };
 
 static struct option long_opt[] = {
@@ -426,6 +428,7 @@ static struct option long_opt[] = {
 	{"frag-sni-faked",	1, 0, OPT_FRAG_SNI_FAKED},
 	{"frag-middle-sni",	1, 0, OPT_FRAG_MIDDLE_SNI},
 	{"frag-sni-pos",	1, 0, OPT_FRAG_SNI_POS},
+	{"frag-origin-retries",	1, 0, OPT_FRAG_ORIGIN_RETRIES},
 	{"fk-winsize",		1, 0, OPT_FK_WINSIZE},
 	{"quic-drop",		0, 0, OPT_QUIC_DROP},
 	{"sni-detection",	1, 0, OPT_SNI_DETECTION},
@@ -439,6 +442,7 @@ static struct option long_opt[] = {
 	{"udp-filter-quic",	1, 0, OPT_UDP_FILTER_QUIC},
 	{"no-dport-filter",	0, 0, OPT_NO_DPORT_FILTER},
 	{"tcp-match-connpackets", 1, 0, OPT_TCP_M_CONNPKTS},
+	{"tcp-match-all",	0, 0, OPT_TCP_M_ALL},
 	{"threads",		1, 0, OPT_THREADS},
 	{"silent",		0, 0, OPT_SILENT},
 	{"trace",		0, 0, OPT_TRACE},
@@ -497,6 +501,7 @@ void print_usage(const char *argv0) {
 	printf("\t--frag-sni-faked={0|1}\n");
 	printf("\t--frag-middle-sni={0|1}\n");
 	printf("\t--frag-sni-pos=<pos>\n");
+	printf("\t--frag-origin-retries=<ntries>\n");
 	printf("\t--fk-winsize=<winsize>\n");
 	printf("\t--quic-drop\n");
 	printf("\t--sni-detection={parse|brute}\n");
@@ -513,6 +518,7 @@ void print_usage(const char *argv0) {
 	printf("\t--packet-mark=<mark>\n");
 	printf("\t--connbytes-limit=<pkts>\n");
 	printf("\t--tcp-match-connpackets=<n of packets in connection>\n");
+	printf("\t--tcp-match-all\n");
 	printf("\t--silent\n");
 	printf("\t--trace\n");
 	printf("\t--instaflush\n");
@@ -794,6 +800,14 @@ int yparse_args(struct config_t *config, int argc, char *argv[]) {
 
 			sect_config->frag_sni_pos = num;
 			break;
+		case OPT_FRAG_ORIGIN_RETRIES:
+			num = parse_numeric_option(optarg);
+			if (errno != 0 || num < 0 || num > 20) {
+				goto invalid_opt;
+			}
+
+			sect_config->frag_origin_retries = num;
+			break;
 		case OPT_TCP_DPORT_FILTER: 
 		{
 			SFREE(sect_config->tcp_dport_range);
@@ -810,7 +824,9 @@ int yparse_args(struct config_t *config, int argc, char *argv[]) {
 
 			sect_config->tcp_match_connpkts = num;
 			break;
-
+		case OPT_TCP_M_ALL:
+			sect_config->tcp_match_all = 1;
+			break;
 		case OPT_FAKING_STRATEGY:
 			if (parse_faking_strategy(
 					optarg, &sect_config->faking_strategy) < 0) {
@@ -1093,6 +1109,10 @@ static size_t print_config_section(const struct section_config_t *section, char 
 			section->tcp_match_connpkts);
 	}
 
+	if (section->tcp_match_all) {
+		print_cnf_buf("--tcp-match-all");
+	}
+
 	if (section->tls_enabled || section->tcp_dport_range_len != 0) {
 		if (section->tls_enabled) {
 			print_cnf_buf("--tls=enabled");	
@@ -1113,6 +1133,8 @@ static size_t print_config_section(const struct section_config_t *section, char 
 
 		print_cnf_buf("--frag-sni-reverse=%d", section->frag_sni_reverse);
 		print_cnf_buf("--frag-sni-faked=%d", section->frag_sni_faked);
+		if (section->frag_origin_retries)
+			print_cnf_buf("--frag-origin-retries=%d", section->frag_origin_retries);
 		print_cnf_buf("--frag-middle-sni=%d", section->frag_middle_sni);
 		print_cnf_buf("--frag-sni-pos=%d", section->frag_sni_pos);
 		print_cnf_buf("--fk-winsize=%d", section->fk_winsize);

@@ -248,6 +248,8 @@ Flags that do not scoped to a specific section, used over all the youtubeUnblock
 
 - `--tcp-match-connpackets` Use this with `--use-conntrack` set. Instead of matching by TLS domains will match packets by OS conntrack connpackets variable (e. g. number of packets sent while connection is alive (SYN is included in the connpackets counter, but anyways will be skipped by youtubeUnblock). You should not set too high number for matching. I recommend something like 4 or 5. If matching happens, youtubeUnblock will send fake and fragement the packet according to fragmentation and faking settings.
 
+- `--tcp-match-all` Matches every packet caught by youtubeUnblock. More strict rules may be applied via tcp-dport-filter.
+
 - `--fake-sni={0|1}` This flag enables fake-sni which forces **youtubeUnblock** to send at least three packets instead of one with TLS *ClientHello*: Fake *ClientHello*, 1st part of original *ClientHello*, 2nd part of original *ClientHello*. This flag may be related to some Operation not permitted error messages, so before open an issue refer to [Troubleshooting for EPERMS](#troubleshooting-eperms-operation-not-permitted). Defaults to **1**.
 
 - `--fake-sni-seq-len=<length>` This flag specifies **youtubeUnblock** to build a complicated construction of fake client hello packets. length determines how much fakes will be sent. Defaults to **1**.
@@ -281,6 +283,7 @@ Flags that do not scoped to a specific section, used over all the youtubeUnblock
 - `--frag-middle-sni={0|1}` With this options **youtubeUnblock** will split the packet in the middle of SNI data. Defaults to 1.
 
 - `--frag-sni-pos=<pos>` With this option **youtubeUnblock** will split the packet at the position pos. Defaults to 1.
+- `--frag-origin-retries=<ntries>` If set, youtubeUnblock will send n + 1 packets with original contents to the socket. Any additional fragmentation does not applied.
 
 - `--fk-winsize=<winsize>` Specifies window size for the fragmented TCP packet. Applicable if you want for response to be fragmented. May slowdown connection initialization.
 
