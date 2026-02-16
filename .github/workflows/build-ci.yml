@@ -283,8 +283,16 @@ jobs:
           SHA: ${{ needs.prepare.outputs.sha }}
         working-directory: /builder
         run: |
-          # Сначала обновляем все стандартные feeds (чтобы появился luci.mk)
-          ./scripts/feeds update -a
+          # Очищаем старые feeds на случай ошибок
+          rm -rf feeds/*
+          
+          # Обновляем все feeds с повторными попытками при ошибке
+          for i in 1 2 3; do
+            ./scripts/feeds update -a && break
+            echo "Feeds update failed (attempt $i/3), retrying in 10 seconds..."
+            sleep 10
+          done
+          
           ./scripts/feeds install -a
           
           # Теперь добавляем свой feed
