@@ -304,6 +304,7 @@ jobs:
           make defconfig
           make package/luci-app-youtubeUnblock/compile V=s
           mv $(find ./bin -type f -name 'luci-app-youtubeUnblock*.ipk') ./luci-app-youtubeUnblock-$VERSION-$RELEASE-$SHA.ipk
+          mv $(find ./bin -type f -name 'luci-i18n-youtubeUnblock*.ipk') ./luci-i18n-youtubeUnblock-$VERSION-$RELEASE-$SHA.ipk
 
       - name: Upload packages
         if: steps.build.outcome == 'success'
