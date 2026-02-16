@@ -6,6 +6,6 @@ LUCI_DEPENDS:=+luci-base
 PKG_LICENSE:=GPL
 PKG_MAINTAINER:=Vadim Vetrov <vetrovvd@gmail.com>
 
-include ./luci.mk
+include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
