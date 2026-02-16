@@ -1,0 +1,5 @@
+msgid "Logs"
+msgstr "Журнал"
+
+msgid "If you want to scroll logs, disable refreshing by clicking the button in the upper right corner of the screen"
+msgstr "Для пролистывания отключите обновление, нажав на кнопку в правом верхнем углу"
