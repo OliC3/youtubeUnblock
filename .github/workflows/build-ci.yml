@@ -283,10 +283,16 @@ jobs:
           SHA: ${{ needs.prepare.outputs.sha }}
         working-directory: /builder
         run: |
+          # Сначала обновляем все стандартные feeds (чтобы появился luci.mk)
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          
+          # Теперь добавляем свой feed
           echo "src-link youtubeUnblock $GITHUB_WORKSPACE" >> feeds.conf
           cat feeds.conf
           ./scripts/feeds update youtubeUnblock
           ./scripts/feeds install -a -p youtubeUnblock
+          
           make defconfig
           make package/luci-app-youtubeUnblock/compile V=s
           mv $(find ./bin -type f -name 'luci-app-youtubeUnblock*.ipk') ./luci-app-youtubeUnblock-$VERSION-$RELEASE-$SHA.ipk
