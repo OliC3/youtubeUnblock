@@ -311,7 +311,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: luci-app-youtubeUnblock
-          path: /builder/luci-app-youtubeUnblock*.ipk
+          path: |
+            /builder/luci-app-youtubeUnblock*.ipk
+            /builder/luci-i18n-youtubeUnblock*.ipk
           if-no-files-found: error
 
   build-entware:
